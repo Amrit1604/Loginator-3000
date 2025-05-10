@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Admin Login</title>
+</head>
+<body>
+    <h1>Direct Admin Login</h1>
+    <form id="admin-login">
+        <button type="submit">Login as Admin</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('admin-login').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Important: Notice we're using admin@123 directly here
+            fetch('/bin/admin_login.sh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'username=admin&password=admin@123'
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('result').innerHTML = `<pre>${data}</pre>`;
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    if (jsonData.success) {
+                        window.location.href = 'admin.html';
+                    }
+                } catch (e) {
+                    console.error("Error parsing JSON:", e);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LinuxPro</title>
+    <style>
+        /* Import fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+
+        :root {
+            /* Terminal-inspired color palette */
+            --primary: #2ECC71;      /* Terminal green */
+            --primary-dark: #27AE60;
+            --secondary: #3498DB;    /* Info blue */
+            --accent: #E74C3C;       /* Error/warning red */
+            --dark: #2C3E50;         /* Dark background */
+            --darker: #1E2B37;       /* Very dark background */
+            --light: #ECF0F1;        /* Light text */
+            --medium: #BDC3C7;       /* Borders, muted elements */
+            --success: #2ECC71;
+            --warning: #F39C12;
+            --danger: #E74C3C;
+            --info: #3498DB;
+            --shadow: rgba(0, 0, 0, 0.15);
+            
+            /* Terminal effects */
+            --glow: 0 0 10px rgba(46, 204, 113, 0.5);
+            --terminal-radius: 6px;
+            --panel-radius: 8px;
+            
+            /* Transitions */
+            --transition-speed: 0.3s;
+        }
+
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(46, 204, 113, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(52, 152, 219, 0.03) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        /* Terminal window styling */
+        .login-required {
+            background-color: var(--darker);
+            border-radius: var(--terminal-radius);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 480px;
+            overflow: hidden;
+            position: relative;
+            margin: 100px auto;
+        }
+
+        /* Terminal window styling for dashboard */
+        #admin-dashboard {
+            background-color: var(--darker);
+            border-radius: var(--terminal-radius);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 1200px;
+            overflow: hidden;
+            position: relative;
+            margin: 20px auto;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Terminal header */
+        .terminal-header, header {
+            background-color: var(--dark);
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 100;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-right: 20px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .terminal-button.close { background-color: #FF5F56; }
+        .terminal-button.minimize { background-color: #FFBD2E; }
+        .terminal-button.maximize { background-color: #27C93F; }
+
+        .terminal-title, header h1 {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-family: 'Fira Code', monospace;
+            color: var(--medium);
+            user-select: none;
+            font-weight: 500;
+        }
+
+        /* Login form styling */
+        .login-content {
+            padding: 30px;
+            background-color: var(--darker);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 2px;
+            background-color: var(--primary);
+            border-radius: 2px;
+        }
+
+        form {
+            margin-top: 25px;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(189, 195, 199, 0.2);
+            border-radius: var(--terminal-radius);
+            color: var(--light);
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            transition: all var(--transition-speed);
+            margin-bottom: 15px;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: var(--glow);
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .login-form input::placeholder {
+            color: rgba(189, 195, 199, 0.6);
+        }
+
+        /* Button styling */
+        button, .action-btn, .refresh-btn, .logout-btn {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: var(--darker);
+            padding: 12px 15px;
+            border: none;
+            border-radius: var(--terminal-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+            font-family: 'Ubuntu', sans-serif;
+        }
+
+        button:hover, .action-btn:hover, .refresh-btn:hover {
+            box-shadow: var(--glow);
+            transform: translateY(-2px);
+        }
+
+        button:active, .action-btn:active, .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Specific button styles */
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--medium);
+            color: var(--medium);
+            padding: 5px 10px;
+            font-size: 12px;
+            position: absolute;
+            right: 20px;
+            text-transform: none;
+        }
+
+        .logout-btn:hover {
+            border-color: var(--light);
+            color: var(--light);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .refresh-btn {
+            background: rgba(52, 152, 219, 0.8);
+            margin-bottom: 15px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            text-transform: none;
+            margin-right: 5px;
+            font-weight: normal;
+        }
+
+        .btn-approve {
+            background: linear-gradient(to right, var(--success), var(--primary-dark));
+        }
+
+        .btn-reject, .btn-delete {
+            background: linear-gradient(to right, var(--danger), #C0392B);
+        }
+
+        .btn-toggle {
+            background: linear-gradient(to right, var(--info), #2980B9);
+        }
+
+        /* Container/Dashboard layout */
+        .container {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Admin tabs */
+        .admin-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.2);
+            border-radius: var(--terminal-radius) var(--terminal-radius) 0 0;
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: var(--medium);
+            transition: all var(--transition-speed);
+            position: relative;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+        }
+
+        .tab:hover {
+            color: var(--light);
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+        }
+
+        /* Tab content */
+        .tab-content {
+            display: none;
+            background-color: var(--darker);
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 0 0 var(--terminal-radius) var(--terminal-radius);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: var(--terminal-radius);
+            overflow: hidden;
+            margin-top: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        table th {
+            background-color: rgba(0,0,0,0.2);
+            color: var(--medium);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        table tr:hover td {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: rgba(46, 204, 113, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .status-inactive {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        /* Container grid */
+        .container-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .container-card {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: var(--terminal-radius);
+            padding: 15px;
+            position: relative;
+            transition: all var(--transition-speed);
+            overflow: hidden;
+        }
+
+        .container-card h3 {
+            color: var(--light);
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+
+        .container-card p {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .container-card strong {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .container-card.running {
+            border-left: 4px solid var(--success);
+        }
+
+        .container-card.stopped {
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Pre tag styling for logs */
+        pre {
+            background-color: rgba(0,0,0,0.3) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: var(--medium) !important;
+            font-family: 'Fira Code', monospace !important;
+            border-radius: 4px !important;
+        }
+
+        /* Error message */
+        .error-message {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+            padding: 12px 15px;
+            border-radius: var(--terminal-radius);
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        /* Blinking cursor effect */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: var(--primary);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Terminal-like scanlines overlay */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .scanlines::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 0, 0, 0.02) 51%
+            );
+            background-size: 100% 4px;
+            z-index: 3;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(46, 204, 113, 0.4);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(46, 204, 113, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Login Section - Shown when not authenticated -->
+    <div id="login-required" class="login-required">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <span class="terminal-button close"></span>
+                <span class="terminal-button minimize"></span>
+                <span class="terminal-button maximize"></span>
+            </div>
+            <div class="terminal-title">admin_login.sh</div>
+        </div>
+        
+        <div class="login-content">
+            <h2>Admin Authentication Required <span class="cursor"></span></h2>
+            <p>Please login with your admin credentials to access the dashboard.</p>
+            
+            <div id="login-error" class="error-message" style="display:none;"></div>
+            
+            <form id="admin-login-form" class="login-form">
+                <input type="text" id="admin-username" placeholder="Admin Username" required>
+                <input type="password" id="admin-password" placeholder="Admin Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <div class="scanlines"></div>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard - Shown when authenticated -->
+    <div id="admin-dashboard" style="display:none;">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <span class="terminal-button close"></span>
+                <span class="terminal-button minimize"></span>
+                <span class="terminal-button maximize"></span>
+            </div>
+            <h1>Loginator-3000 Admin Dashboard</h1>
+            <button id="logout-btn" class="logout-btn">Logout</button>
+        </div>
+        
+        <div class="container">
+            <div class="admin-tabs">
+                <div class="tab active" data-tab="pending-users">Pending Registrations</div>
+                <div class="tab" data-tab="registered-users">Registered Users</div>
+                <div class="tab" data-tab="containers">Container Status</div>
+            </div>
+            
+            <div id="pending-users" class="tab-content active">
+                <h2>Pending User Registrations</h2>
+                <button id="refresh-pending" class="refresh-btn">Refresh</button>
+                <table id="pending-users-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Registration Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5">Loading pending users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="registered-users" class="tab-content">
+                <h2>Registered Users</h2>
+                <button id="refresh-users" class="refresh-btn">Refresh</button>
+                <table id="registered-users-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Registration Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="6">Loading registered users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="containers" class="tab-content">
+                <h2>Container Status</h2>
+                <button id="refresh-containers" class="refresh-btn">Refresh</button>
+                <div id="container-grid" class="container-grid">
+                    <p>Loading container information...</p>
+                </div>
+            </div>
+            
+            <div class="scanlines"></div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Check admin session when page loads
+            function checkAdminSession() {
+                fetch('/bin/verify_admin.sh')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.valid) {
+                            document.getElementById('admin-dashboard').style.display = 'block';
+                            document.getElementById('login-required').style.display = 'none';
+                            
+                            // Load admin data
+                            loadPendingUsers();
+                            loadRegisteredUsers();
+                            loadContainerStatus();
+                        } else {
+                            document.getElementById('admin-dashboard').style.display = 'none';
+                            document.getElementById('login-required').style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking admin session:', error);
+                        document.getElementById('admin-dashboard').style.display = 'none';
+                        document.getElementById('login-required').style.display = 'block';
+                    });
+            }
+            
+            // Initial check
+            checkAdminSession();
+            
+            // Admin login form submission
+            document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('admin-username').value;
+                const password = document.getElementById('admin-password').value;
+                
+                fetch('/bin/admin_login.sh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('admin-dashboard').style.display = 'block';
+                        document.getElementById('login-required').style.display = 'none';
+                        
+                        // Load admin data
+                        loadPendingUsers();
+                        loadRegisteredUsers();
+                        loadContainerStatus();
+                    } else {
+                        document.getElementById('login-error').textContent = data.message || 'Invalid admin credentials';
+                        document.getElementById('login-error').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during admin login:', error);
+                    document.getElementById('login-error').textContent = 'A network error occurred. Please try again.';
+                    document.getElementById('login-error').style.display = 'block';
+                });
+            });
+            
+            // Admin logout
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                fetch('/bin/admin_logout.sh')
+                    .then(() => {
+                        document.getElementById('admin-dashboard').style.display = 'none';
+                        document.getElementById('login-required').style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error during admin logout:', error);
+                    });
+            });
+            
+            // Refresh buttons
+            document.getElementById('refresh-pending').addEventListener('click', loadPendingUsers);
+            document.getElementById('refresh-users').addEventListener('click', loadRegisteredUsers);
+            document.getElementById('refresh-containers').addEventListener('click', loadContainerStatus);
+            
+            // Load pending users
+            function loadPendingUsers() {
+                fetch('/bin/get_pending_users.sh')
+                    .then(response => response.json())
+                    .then(data => {
+                        const tbody = document.querySelector('#pending-users-table tbody');
+                        
+                        if (!data || data.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="5">No pending users</td></tr>';
+                            return;
+                        }
+                        
+                        let html = '';
+                        data.forEach(user => {
+                            html += `
+                                <tr>
+                                    <td>${user.username}</td>
+                                    <td>${user.email}</td>
+                                    <td>${user.phone}</td>
+                                    <td>${user.date}</td>
+                                    <td>
+                                        <button class="action-btn btn-approve" data-username="${user.username}">Approve</button>
+                                        <button class="action-btn btn-reject" data-username="${user.username}">Reject</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tbody.innerHTML = html;
+                        
+                        // Add event listeners for approve/reject buttons
+                        document.querySelectorAll('.btn-approve').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                approveUser(this.getAttribute('data-username'));
+                            });
+                        });
+                        
+                        document.querySelectorAll('.btn-reject').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                rejectUser(this.getAttribute('data-username'));
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading pending users:', error);
+                    });
+            }
+            
+            // Load registered users
+            function loadRegisteredUsers() {
+                fetch('/bin/get_all_users.sh')
+                    .then(response => response.json())
+                    .then(data => {
+                        const tbody = document.querySelector('#registered-users-table tbody');
+                        
+                        if (!data || data.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="6">No registered users</td></tr>';
+                            return;
+                        }
+                        
+                        let html = '';
+                        data.forEach(user => {
+                            const statusClass = user.active ? 'status-active' : 'status-inactive';
+                            const statusText = user.active ? 'Active' : 'Inactive';
+                            const actionText = user.active ? 'Deactivate' : 'Activate';
+                            
+                            html += `
+                                <tr>
+                                    <td>${user.username}</td>
+                                    <td>${user.email}</td>
+                                    <td>${user.phone}</td>
+                                    <td>${user.date}</td>
+                                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                    <td>
+                                        <button class="action-btn btn-toggle" 
+                                                data-username="${user.username}" 
+                                                data-status="${user.active ? 'active' : 'inactive'}">
+                                            ${actionText}
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tbody.innerHTML = html;
+                        
+                        // Add event listeners for toggle buttons
+                        document.querySelectorAll('.btn-toggle').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                toggleUserStatus(
+                                    this.getAttribute('data-username'),
+                                    this.getAttribute('data-status')
+                                );
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading registered users:', error);
+                    });
+            }
+            
+/// Load container status with better error handling
+function loadContainerStatus() {
+    fetch('/bin/get_user_logs.sh')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.text();  // Get as text first
+        })
+        .then(text => {
+            console.log("Raw response:", text);  // Debug output
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error("JSON parse error:", e);
+                console.error("Raw text received:", text);
+                throw new Error("Failed to parse JSON response");
+            }
+        })
+        .then(data => {
+            // Process data as before
+            const containerGrid = document.getElementById('container-grid');
+            if (!data || data.length === 0) {
+                containerGrid.innerHTML = '<p>No active user sessions found</p>';
+                return;
+            }
+            
+            let html = '';
+            data.forEach(user => {
+                html += `
+                    <div class="container-card running">
+                        <h3>${user.username}'s Session</h3>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Last Login:</strong> ${user.lastLogin}</p>
+                        <p><strong>CPU Usage:</strong> ${user.cpuUsage}%</p>
+                        <p><strong>Memory:</strong> ${user.memoryUsage}MB</p>
+                        <hr>
+                        <h4>Recent Activity:</h4>
+                        <pre style="background:#f8f8f8;border:1px solid #ddd;height:120px;overflow-y:auto;padding:10px;font-size:12px;white-space:pre-wrap;">${user.recentActivities}</pre>
+                    </div>
+                `;
+            });
+            
+            containerGrid.innerHTML = html;
+        })
+.catch(error => {
+    console.error('Error loading user logs:', error);
+    // More detailed error logging
+    document.getElementById('container-grid').innerHTML = 
+        `<p class="error">Error loading user logs: ${error.message}</p>
+         <p>Please check that:</p>
+         <ul>
+             <li>The script get_user_logs.sh exists in the bin directory</li>
+             <li>The script has executable permissions (chmod +x)</li>
+             <li>The script outputs valid JSON</li>
+         </ul>`;
+});
+}
+
+// View full logs function
+window.viewFullLogs = function(username) {
+    // Open logs in modal or new window
+    alert(`Viewing full logs for ${username} would open a detailed log view here.`);
+    
+    // For a complete implementation, you could fetch full logs via:
+    // fetch('/bin/get_full_user_logs.sh?username=' + encodeURIComponent(username))
+    //    .then(response => response.text())
+    //    .then(logs => { /* display logs in modal */ });
+};
+
+// Terminate user session function
+window.terminateSession = function(username, sessionId) {
+    if (confirm(`Are you sure you want to terminate ${username}'s session?`)) {
+        fetch('/bin/terminate_session.sh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `username=${encodeURIComponent(username)}&session=${encodeURIComponent(sessionId)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`${username}'s session has been terminated.`);
+                loadContainerStatus(); // Refresh the display
+            } else {
+                alert('Error: ' + (data.message || 'Failed to terminate session'));
+            }
+        })
+        .catch(error => {
+            console.error('Error terminating session:', error);
+            alert('Error terminating session. Please check console for details.');
+        });
+    }
+};
+
+// Reduce auto-refresh interval for more real-time updates
+setInterval(function() {
+    loadPendingUsers();
+    loadRegisteredUsers();
+    loadContainerStatus();
+}, 10000); // Every 10 seconds instead of 30
+
+// ...existing code...
+            
+            // Approve user function
+            window.approveUser = function(username) {
+                fetch('/bin/approve_user.sh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `username=${encodeURIComponent(username)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload data
+                        loadPendingUsers();
+                        loadRegisteredUsers();
+                        loadContainerStatus();
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to approve user'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error approving user:', error);
+                    alert('Error approving user. Please check console for details.');
+                });
+            };
+            
+            // Reject user function
+            window.rejectUser = function(username) {
+                fetch('/bin/reject_user.sh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `username=${encodeURIComponent(username)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload pending users
+                        loadPendingUsers();
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to reject user'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error rejecting user:', error);
+                    alert('Error rejecting user. Please check console for details.');
+                });
+            };
+            
+            // Toggle user status function
+            window.toggleUserStatus = function(username, currentStatus) {
+                const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+                
+                fetch('/bin/toggle_user_status.sh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `username=${encodeURIComponent(username)}&status=${newStatus}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload data
+                        loadRegisteredUsers();
+                        loadContainerStatus();
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to update user status'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error toggling user status:', error);
+                    alert('Error updating user status. Please check console for details.');
+                });
+            };
+            
+
+        });
+    </script>
+</body>
+</html>
