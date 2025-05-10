@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinuxPro Terminal Dashboard</title>
+    <title>Loginator-3000 Terminal Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Import fonts */
@@ -994,20 +994,20 @@
                     <div class="panel-content" style="padding: 0;">
                         <div class="terminal-content" id="terminal-output">
                             <div class="terminal-line">
-                                <span class="terminal-output">Welcome to LinuxPro terminal v1.0</span>
+                                <span class="terminal-output">Welcome to  terminal v1.0</span>
                             </div>
                             <div class="terminal-line">
                                 <span class="terminal-output">Type 'help' to see available commands</span>
                             </div>
                             <div class="terminal-line">
-                                <span class="terminal-prompt">user@linuxpro:~$</span>
+                                <span class="terminal-prompt">user@Loginator-3000:~$</span>
                                 <span class="terminal-command">whoami</span>
                             </div>
                             <div class="terminal-line">
                                 <span class="terminal-output" id="terminal-whoami">user</span>
                             </div>
                             <div class="terminal-line">
-                                <span class="terminal-prompt">user@linuxpro:~$</span>
+                                <span class="terminal-prompt">user@Loginator-3000:~$</span>
                                 <span class="terminal-command">date</span>
                             </div>
                             <div class="terminal-line">
@@ -1015,7 +1015,7 @@
                             </div>
                         </div>
                         <div class="terminal-input-line">
-                            <span class="terminal-prompt" id="prompt-username">user@linuxpro:~$</span>
+                            <span class="terminal-prompt" id="prompt-username">user@Loginator-3000:~$</span>
                             <input type="text" class="terminal-input" id="terminal-command-input" autofocus>
                         </div>
                     </div>
@@ -1214,7 +1214,7 @@
                     addTerminalLine('output', '        `"Y$$$ga,      ');
                     addTerminalLine('output', '             `"Y$$$$$$a.');
                     addTerminalLine('output', '');
-                    addTerminalLine('output', `OS: LinuxPro ${Math.floor(Math.random() * 10) + 1}.${Math.floor(Math.random() * 10)}`);
+                    addTerminalLine('output', `OS: Loginator-3000 ${Math.floor(Math.random() * 10) + 1}.${Math.floor(Math.random() * 10)}`);
                     addTerminalLine('output', `Host: WebContainer v${Math.floor(Math.random() * 5) + 1}`);
                     addTerminalLine('output', 'Kernel: ' + (new Date()).toLocaleDateString());
                     addTerminalLine('output', 'Uptime: ' + Math.floor(Math.random() * 24) + ' hours, ' + Math.floor(Math.random() * 60) + ' mins');
@@ -1637,7 +1637,7 @@
             document.getElementById('username-display').textContent = username;
             document.getElementById('user-display-name').textContent = username;
             document.getElementById('terminal-whoami').textContent = username;
-            document.getElementById('prompt-username').textContent = `${username}@linuxpro:~$`;
+            document.getElementById('prompt-username').textContent = `${username}@Loginator-3000:~$`;
             
             // Set first letter of username as avatar
             document.getElementById('user-avatar').textContent = username.charAt(0).toUpperCase();
