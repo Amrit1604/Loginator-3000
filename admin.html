@@ -494,6 +494,60 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(46, 204, 113, 0.6);
         }
+
+
+        /* System Status Monitor Styling */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  font-family: 'Fira Code', monospace;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.bg-success {
+  background-color: #2ECC71;
+  color: white;
+}
+
+.bg-danger {
+  background-color: #E74C3C;
+  color: white;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #3498DB, #2980B9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 10px;
+}
+
+.refresh-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+
     </style>
 </head>
 <body>
@@ -536,11 +590,15 @@
         </div>
         
         <div class="container">
-            <div class="admin-tabs">
-                <div class="tab active" data-tab="pending-users">Pending Registrations</div>
-                <div class="tab" data-tab="registered-users">Registered Users</div>
-                <div class="tab" data-tab="containers">Container Status</div>
-            </div>
+<div class="admin-tabs">
+    <div class="tab active" data-tab="pending-users">Pending Registrations</div>
+    <div class="tab" data-tab="registered-users">Registered Users</div>
+    <div class="tab" data-tab="containers">Container Status</div>
+    <div class="tab" data-tab="system-status">System Status</div>
+      <button id="exportUsers" class="btn btn-secondary">
+    <i class="fas fa-download"></i> Export User Data
+  </button>
+</div>
             
             <div id="pending-users" class="tab-content active">
                 <h2>Pending User Registrations</h2>
@@ -583,6 +641,11 @@
                         </tr>
                     </tbody>
                 </table>
+                <div class="action-button-container">
+
+</div>
+
+
             </div>
             
             <div id="containers" class="tab-content">
@@ -592,12 +655,124 @@
                     <p>Loading container information...</p>
                 </div>
             </div>
+
+            <!-- System Status Tab Content -->
+<div id="system-status" class="tab-content">
+  <h2>System Status Monitor</h2>
+  <button id="refresh-status" class="refresh-btn">Refresh Status</button>
+  
+  <div class="status-grid">
+    <div class="status-item">
+      <span class="status-label">Database:</span>
+      <span id="dbStatus" class="status-value">Checking...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">File System:</span>
+      <span id="fsStatus" class="status-value">Checking...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Login System:</span>
+      <span id="loginStatus" class="status-value">Checking...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Server Load:</span>
+      <span id="loadStatus" class="status-value">Checking...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Disk Usage:</span>
+      <span id="diskStatus" class="status-value">Checking...</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Last Updated:</span>
+      <span id="lastUpdated" class="status-value">Never</span>
+    </div>
+  </div>
+</div>
             
             <div class="scanlines"></div>
         </div>
     </div>
     
     <script>
+        function deleteUser(username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+        fetch('bin/delete_user.sh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `username=${encodeURIComponent(username)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('User deleted successfully');
+                // Refresh the user list
+                loadUsers();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the user');
+        });
+    }
+}
+
+function assignWork(username) {
+    const workTask = prompt(`Enter work assignment for ${username}:`);
+    if (workTask) {
+        fetch('bin/assign_work.sh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `username=${encodeURIComponent(username)}&work=${encodeURIComponent(workTask)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Work assigned successfully');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while assigning work');
+        });
+    }
+}
+
+// Update your user listing function to include the new buttons
+function displayUsers(users) {
+    const userList = document.getElementById('userList');
+    userList.innerHTML = '';
+    
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        
+        // Add user information cells
+        row.innerHTML = `
+            <td>${user.username}</td>
+            <td>${user.email}</td>
+            <td>${user.registration_date}</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" ${user.active === '1' ? 'checked' : ''} onchange="toggleUserActive('${user.username}', this.checked)">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+            <td>
+                <button class="btn btn-danger" onclick="deleteUser('${user.username}')">Delete</button>
+                <button class="btn btn-primary" onclick="assignWork('${user.username}')">Assign Work</button>
+            </td>
+        `;
+        
+        userList.appendChild(row);
+    });
+}
         document.addEventListener('DOMContentLoaded', function() {
             // Tab switching functionality
             document.querySelectorAll('.tab').forEach(tab => {
@@ -981,6 +1156,67 @@ setInterval(function() {
             
 
         });
+
+
+
+        // download 
+        document.getElementById('exportUsers').addEventListener('click', function() {
+  fetch('bin/export_users.sh')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('User data exported successfully to: ' + data.file);
+      } else {
+        alert('Export failed: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Export failed. See console for details.');
+    });
+});
+
+
+// Status monitor functionality
+function updateSystemStatus() {
+  console.log("Updating system status...");
+  
+  fetch('bin/check_status.sh')
+    .then(response => {
+      console.log("Status response received:", response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log("Status data:", data);
+      
+      if (data && data.status) {
+        document.getElementById('dbStatus').innerHTML = getStatusBadge(data.status.database);
+        document.getElementById('fsStatus').innerHTML = getStatusBadge(data.status.filesystem);
+        document.getElementById('loginStatus').innerHTML = getStatusBadge(data.status.login_system);
+        document.getElementById('loadStatus').textContent = data.status.server_load || "N/A";
+        document.getElementById('diskStatus').textContent = data.status.disk_usage || "N/A";
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+      } else {
+        console.error("Invalid response format:", data);
+        showAllFailed();
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching status:', error);
+      showAllFailed();
+    });
+}
+
+function showAllFailed() {
+  document.getElementById('dbStatus').innerHTML = getStatusBadge('failed');
+  document.getElementById('fsStatus').innerHTML = getStatusBadge('failed');
+  document.getElementById('loginStatus').innerHTML = getStatusBadge('failed');
+  document.getElementById('loadStatus').textContent = "Error";
+  document.getElementById('diskStatus').textContent = "Error";
+  document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString() + " (Error)";
+}
+
+
     </script>
 </body>
 </html>

@@ -843,9 +843,83 @@
             from, to { border-color: transparent }
             50% { border-color: var(--primary) }
         }
+
+/* Easter egg animation */
+.easter-egg {
+  animation: rainbow-bg 5s infinite;
+}
+
+@keyframes rainbow-bg {
+  0% { background-color: #ff0000; }
+  17% { background-color: #ff8000; }
+  33% { background-color: #ffff00; }
+  50% { background-color: #00ff00; }
+  67% { background-color: #0000ff; }
+  83% { background-color: #8000ff; }
+  100% { background-color: #ff0000; }
+}
+
+/* Confetti animation */
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  z-index: 9999;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  to { transform: translateY(100vh) rotate(720deg); }
+}
+
+/* Achievement notification */
+.achievement-unlocked {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: slide-in 0.5s ease forwards;
+  z-index: 10000;
+}
+
+.achievement-icon {
+  font-size: 40px;
+}
+
+.achievement-text h3 {
+  margin: 0 0 5px 0;
+  color: gold;
+}
+
+.achievement-text p {
+  margin: 0;
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.slide-out {
+  animation: slide-out 0.5s ease forwards;
+}
+
+@keyframes slide-out {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
     </style>
 </head>
 <body>
+
     <div class="dashboard">
         <!-- Header Bar -->
         <header class="header">
@@ -1098,9 +1172,30 @@
                 </div>
             </div>
         </main>
+
+        <div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fas fa-tasks"></i> My Assignments
+        </div>
+        <div class="panel-actions">
+            <button class="panel-action" id="refresh-assignments"><i class="fas fa-sync-alt"></i></button>
+        </div>
+    </div>
+    <div class="panel-content">
+        <div id="assignmentsList" class="assignments-list">
+            <p>Loading assignments...</p>
+        </div>
+    </div>
+</div>
     </div>
 
+
+
+
     <script>
+
+
         // Utility functions
         function updateDateTime() {
             const now = new Date();
@@ -1201,19 +1296,6 @@
                     break;
                     
                 case 'neofetch':
-                    addTerminalLine('output', '       _,met$$$$$gg.');
-                    addTerminalLine('output', '    ,g$$$$$$$$$$$$$$$P.');
-                    addTerminalLine('output', '  ,g$$P"     """Y$$.".');
-                    addTerminalLine('output', ' ,$$P\'              `$$.');
-                    addTerminalLine('output', ',$$P       ,ggs.     `$$');
-                    addTerminalLine('output', '`$$$.     `"\'    .    $$');
-                    addTerminalLine('output', ' `$$$    .     ,g$$$,  $');
-                    addTerminalLine('output', '  `$$b    "Y$$$P"   $$:$');
-                    addTerminalLine('output', '    "Y$$              $"');
-                    addTerminalLine('output', '     `"Y$$b.           ');
-                    addTerminalLine('output', '        `"Y$$$ga,      ');
-                    addTerminalLine('output', '             `"Y$$$$$$a.');
-                    addTerminalLine('output', '');
                     addTerminalLine('output', `OS: Loginator-3000 ${Math.floor(Math.random() * 10) + 1}.${Math.floor(Math.random() * 10)}`);
                     addTerminalLine('output', `Host: WebContainer v${Math.floor(Math.random() * 5) + 1}`);
                     addTerminalLine('output', 'Kernel: ' + (new Date()).toLocaleDateString());
@@ -1744,7 +1826,7 @@
                 
                 // Redirect to login page
                 setTimeout(() => {
-                    window.location.href = '/login.html';
+                    window.location.href = '/index.html';
                 }, 1000);
             }, 1500);
         }
@@ -1848,6 +1930,152 @@
             // Attempt to load containers, if fails then use fallback data
             loadContainers().catch(handleServerError);
         });
+
+
+        // Konami Code Easter Egg
+let konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let konamiIndex = 0;
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === konamiCode[konamiIndex]) {
+    konamiIndex++;
+    
+    if (konamiIndex === konamiCode.length) {
+      // Easter egg activated!
+      document.body.classList.add('easter-egg');
+      
+      // Create confetti
+      for (let i = 0; i < 100; i++) {
+        createConfetti();
+      }
+      
+      // Show achievement
+      const notification = document.createElement('div');
+      notification.className = 'achievement-unlocked';
+      notification.innerHTML = `
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-text">
+          <h3>Achievement Unlocked!</h3>
+          <p>Konami Code Master</p>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      
+      // Remove after animation
+      setTimeout(() => {
+        notification.classList.add('slide-out');
+        setTimeout(() => notification.remove(), 1000);
+      }, 5000);
+      
+      konamiIndex = 0;
+    }
+  } else {
+    konamiIndex = 0;
+  }
+});
+
+function createConfetti() {
+  const confetti = document.createElement('div');
+  confetti.className = 'confetti';
+  confetti.style.left = Math.random() * 100 + 'vw';
+  confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+  confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+  document.body.appendChild(confetti);
+  
+  // Remove confetti after animation
+  setTimeout(() => confetti.remove(), 5000);
+}
+
+function displayUsers(users) {
+    const userList = document.getElementById('userList');
+    userList.innerHTML = '';
+    
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>${user.username}</td>
+            <td>${user.email}</td>
+            <td>${user.registration_date || ''}</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" ${user.active === '1' ? 'checked' : ''} onchange="toggleUserActive('${user.username}', this.checked)">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="assignWork('${user.username}')">
+                    <i class="fas fa-tasks"></i> Assign Work
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.username}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </td>
+        `;
+        
+        userList.appendChild(row);
+    });
+}
+
+// Add these new functions:
+function assignWork(username) {
+    const workTask = prompt(`Enter work assignment for ${username}:`);
+    if (workTask) {
+        fetch('bin/assign_work.sh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `username=${encodeURIComponent(username)}&work=${encodeURIComponent(workTask)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Work assigned successfully');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while assigning work');
+        });
+    }
+}
+
+function deleteUser(username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+        fetch('bin/delete_user.sh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `username=${encodeURIComponent(username)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('User deleted successfully');
+                loadUsers(); // Refresh user list
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the user');
+        });
+    }
+}
+
+document.getElementById('refresh-assignments').addEventListener('click', loadAssignments);
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSession();
+    loadAssignments(); 
+});
+
+
     </script>
 </body>
 </html>

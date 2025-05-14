@@ -53,4 +53,10 @@ done < "$PENDING_FILE"
 # Replace pending with any unprocessed entries
 mv "$TMP_PENDING" "$PENDING_FILE" 2>/dev/null
 
+"$(dirname "$0")/update_export.sh" &> /dev/null &
+
 echo "<br><a href='../admin.html'>← Back to Admin Panel</a>"
+
+
+
+
